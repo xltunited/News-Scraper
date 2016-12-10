@@ -13,14 +13,26 @@ var cheerio = require('cheerio');
 var mongoose = require("mongoose");
 var logger = require("morgan");
 
+// Handlebars and Path
 
-
-/* Showing Mongoose's "Populated" Method (18.3.6)
- * INSTRUCTOR ONLY
- * =============================================== */
+var exphbs = require("express-handlebars");
+var path = require("path");
 
 // Dependencies
 var bodyParser = require("body-parser");
+
+
+// Initialize Express
+var app = express();
+
+// MIDDLEWARE
+app.set("views", __dirname + "/views");
+app.engine("handlebars", exphbs({defaultLayout: "main"}));
+app.set("view engine", "handlebars");
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.text());
+app.use(bodyParser.json({type:"application/vnd.api+json"}));
 
 // Mongoose mpromise deprecated - use bluebird promises
 var Promise = require("bluebird");
@@ -29,9 +41,6 @@ mongoose.Promise = Promise;
 
 // Bring in our Model for the news article
 var Article = require("./schemas/articleSchema.js");
-
-// Initialize Express
-var app = express();
 
 // Use morgan and body parser with our app
 app.use(logger("dev"));
@@ -62,11 +71,22 @@ db.once("open", function() {
 
 // Simple index route
 app.get("/", function(req, res) {
-  res.send("<h1>Hi!</h1>");
+  res.redirect("/home");
 });
 
+app.get("/home", function(req, res) {
+  
+  res.render("home");
 
-// This GET route handles the creation of a new book in our mongodb books collection
+});
+
+app.get("/article", function(req, res) {
+  
+  res.render("home");
+
+});
+
+// This GET route handles the creation of a new book in our mongodb article collection
 app.get("/scrape", function(req, res) {
 
   request('http://www.npr.org/', function(error, response, html) {
@@ -103,7 +123,7 @@ app.get("/scrape", function(req, res) {
           if (error) {
             res.send(error);
           }
-          // Otherwise, send the new doc to the browser
+
         });
 
       }
@@ -115,22 +135,6 @@ app.get("/scrape", function(req, res) {
   // // this will send a "search complete" message to the browser
   res.send("Scrape Complete");
 
-});
-
-
-// This GET route let's us see the books we have added
-app.get("/books", function(req, res) {
-  // Using our Book model, "find" every book in our book db
-  article.find({}, function(error, doc) {
-    // Send any errors to the browser
-    if (error) {
-      res.send(error);
-    }
-    // Or send the doc to the browser
-    else {
-      res.send(doc);
-    }
-  });
 });
 
 // Listen on port 3000
